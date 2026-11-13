@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Alopaz Multicuisine Restaurant — QR Menu & Ordering</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      --primary: #0b3b24;
+      --primary-light: #14532d;
+      --accent: #f5b700;
+      --accent-dark: #d99b00;
+      --bg: #fffdf6;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --veg: #16a34a;
+      --nonveg: #dc2626;
+      --whatsapp: #25d366;
+      --shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 96px; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, #062516 100%);
+      color: #fff;
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+    }
+    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--accent); color: var(--primary);
+      display: grid; place-items: center; font-weight: 900; font-size: 16px;
+      border: 2px solid #fff; flex-shrink: 0;
+    }
+    .brand h1 { font-size: 18px; letter-spacing: 0.5px; color: var(--accent); line-height: 1.1; }
+    .brand p { font-size: 11px; color: #d1fae5; margin-top: 2px; }
+
+    .nav-pills { display: flex; gap: 6px; margin-top: 12px; }
+    .nav-pill {
+      flex: 1; padding: 8px 6px; border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08); color: #fff; border-radius: 8px;
+      font-size: 12px; font-weight: 600; cursor: pointer; text-align: center;
+      transition: 0.2s;
+    }
+    .nav-pill.active { background: var(--accent); color: var(--primary); border-color: var(--accent); }
+
+    /* Search & Filter */
+    .controls {
+      background: #fff; padding: 12px 16px 8px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 103px; z-index: 40;
+    }
+    .search-row { display: flex; gap: 8px; align-items: center; }
+    .search-box {
+      flex: 1; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--border); font-size: 14px; outline: none;
+      background: #f9fafb;
+    }
+    .search-box:focus { border-color: var(--primary); background: #fff; }
+    .diet-filter { display: flex; gap: 4px; }
+    .diet-btn {
+      padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .diet-btn.active-all { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .diet-btn.active-veg { background: #dcfce7; color: var(--veg); border-color: var(--veg); }
+    .diet-btn.active-nonveg { background: #fee2e2; color: var(--nonveg); border-color: var(--nonveg); }
+
+    /* Category Tabs */
+    .cat-tabs {
+      display: flex; gap: 8px; overflow-x: auto; padding: 10px 0 4px;
+      scrollbar-width: none;
+    }
+    .cat-tabs::-webkit-scrollbar { display: none; }
+    .cat-tab {
+      white-space: nowrap; padding: 6px 13px; border-radius: 20px;
+      background: #f3f4f6; color: var(--text); font-size: 12px; font-weight: 600;
+      border: none; cursor: pointer; transition: 0.2s;
+    }
+    .cat-tab.active { background: var(--primary); color: var(--accent); }
+
+    /* Main Container */
+    .container { max-width: 820px; margin: 0 auto; padding: 14px 16px; }
+    .table-banner {
+      background: #fef3c7; color: #92400e; padding: 8px 12px;
+      border-radius: 8px; font-size: 12px; font-weight: 600;
+      margin-bottom: 12px; display: none; justify-content: space-between; align-items: center;
+    }
+
+    /* Menu Section */
+    .cat-heading {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 18px 0 10px; padding-bottom: 6px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .cat-heading h2 { font-size: 16px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+    .cat-heading span { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+    .menu-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 640px) { .menu-grid { grid-template-columns: 1fr 1fr; } }
+
+    .item-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+    }
+    .item-top { display: flex; align-items: flex-start; gap: 8px; }
+    .veg-icon {
+      width: 15px; height: 15px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;
+      display: grid; place-items: center; border: 1.5px solid var(--veg);
+    }
+    .veg-icon::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--veg); }
+    .veg-icon.nonveg { border-color: var(--nonveg); }
+    .veg-icon.nonveg::after { background: var(--nonveg); }
+
+    .item-title { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; }
+    .item-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .variant-row { display: flex; flex-direction: column; gap: 6px; }
+    .variant-line {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #f9fafb; padding: 6px 8px; border-radius: 8px;
+    }
+    .variant-label { font-size: 12px; font-weight: 600; color: #374151; }
+    .price { font-size: 14px; font-weight: 800; color: var(--primary); }
+
+    .add-btn {
+      background: #fff; color: var(--primary); border: 1.5px solid var(--primary);
+      padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 800;
+      cursor: pointer; transition: 0.15s;
+    }
+    .add-btn:hover { background: var(--primary); color: #fff; }
+
+    .stepper {
+      display: inline-flex; align-items: center; background: var(--primary);
+      color: #fff; border-radius: 8px; overflow: hidden;
+    }
+    .stepper button {
+      background: transparent; border: none; color: #fff; font-weight: 800;
+      width: 28px; height: 28px; cursor: pointer; font-size: 15px;
+    }
+    .stepper span { padding: 0 8px; font-size: 13px; font-weight: 700; }
+
+    /* Floating Cart Bar */
+    .cart-bar {
+      position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 24px); max-width: 560px;
+      background: var(--primary); color: #fff;
+      padding: 12px 16px; border-radius: 14px;
+      display: none; align-items: center; justify-content: space-between;
+      box-shadow: 0 10px 25px rgba(11, 59, 36, 0.35);
+      z-index: 60; cursor: pointer;
+    }
+    .cart-bar.visible { display: flex; }
+    .cart-bar-left strong { font-size: 15px; color: var(--accent); display: block; }
+    .cart-bar-left span { font-size: 12px; color: #d1fae5; }
+    .cart-bar-btn {
+      background: var(--accent); color: var(--primary);
+      padding: 9px 14px; border-radius: 10px; font-weight: 800; font-size: 13px; border: none;
+    }
+
+    /* Modal / Drawer */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      display: none; align-items: flex-end; justify-content: center; z-index: 100;
+    }
+    .modal-backdrop.open { display: flex; }
+    @media (min-width: 640px) { .modal-backdrop { align-items: center; } }
+    .modal {
+      background: #fff; width: 100%; max-width: 520px; max-height: 92vh;
+      border-radius: 18px 18px 0 0; overflow-y: auto; padding: 18px;
+      animation: slideUp 0.2s ease-out;
+    }
+    @media (min-width: 640px) { .modal { border-radius: 16px; } }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .modal-head h3 { font-size: 18px; color: var(--primary); }
+    .close-btn {
+      background: #f3f4f6; border: none; width: 32px; height: 32px;
+      border-radius: 50%; font-size: 18px; cursor: pointer;
+    }
+
+    .cart-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    .cart-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 8px; border-bottom: 1px dashed var(--border); gap: 8px;
+    }
+    .cart-row-info { flex: 1; }
+    .cart-row-info h4 { font-size: 13px; }
+    .cart-row-info p { font-size: 12px; color: var(--muted); }
+
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; color: #374151; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 10px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 14px; outline: none;
+    }
+    .form-group input:focus { border-color: var(--primary); }
+
+    .bill-summary {
+      background: #f9fafb; padding: 12px; border-radius: 10px; margin: 12px 0;
+      display: flex; justify-content: space-between; font-weight: 800; font-size: 16px; color: var(--primary);
+    }
+
+    .wa-submit-btn {
+      width: 100%; background: var(--whatsapp); color: #fff; border: none;
+      padding: 13px; border-radius: 12px; font-size: 15px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .wa-submit-btn:hover { filter: brightness(0.95); }
+
+    /* Views (QR & Owner Panel) */
+    .view-panel { display: none; }
+    .view-panel.active { display: block; }
+
+    .card-box {
+      background: #fff; border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+    }
+    .card-box h2 { font-size: 17px; color: var(--primary); margin-bottom: 6px; }
+    .card-box p { font-size: 13px; color: var(--muted); line-height: 1.45; margin-bottom: 12px; }
+
+    .qr-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 640px) { .qr-grid { grid-template-columns: 1fr 1fr; } }
+    .qr-card {
+      border: 2px dashed var(--primary); border-radius: 14px; padding: 16px;
+      text-align: center; background: #fffdf6;
+    }
+    .qr-holder {
+      display: inline-block; padding: 12px; background: #fff;
+      border-radius: 10px; margin: 10px 0; border: 1px solid var(--border);
+    }
+    .btn-secondary {
+      background: var(--primary); color: #fff; border: none;
+      padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .btn-ready {
+      background: var(--whatsapp); color: #fff; border: none;
+      padding: 9px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .order-ticket {
+      border: 1px solid var(--border); border-left: 5px solid var(--accent);
+      border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #fff;
+    }
+    .order-ticket.ready { border-left-color: var(--veg); background: #f0fdf4; }
+    .badge {
+      display: inline-block; padding: 3px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 700;
+    }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-ready { background: #dcfce7; color: #166534; }
+
+    @media print {
+      .header, .controls, .cart-bar, .no-print { display: none !important; }
+      body { padding: 0; background: #fff; }
+      .qr-card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-logo">AZ</div>
+        <div>
+          <h1>ALOPAZ</h1>
+          <p>Multicuisine Restaurant • Better Food, Better Mood</p>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:11px;color:#d1fae5;">
+        <div>WhatsApp Orders</div>
+        <strong style="color:#f5b700;font-size:12px;">+91 8271492457</strong>
+      </div>
+    </div>
+    <div class="nav-pills">
+      <button class="nav-pill active" onclick="switchView('menu', this)">🍽️ Menu</button>
+      <button class="nav-pill" onclick="switchView('qr', this)">📱 QR Codes</button>
+      <button class="nav-pill" onclick="switchView('owner', this)">👨‍🍳 Owner Kitchen</button>
+    </div>
+  </header>
+
+  <!-- Search & Category Controls (Menu View Only) -->
+  <div class="controls" id="menuControls">
+    <div class="search-row">
+      <input type="text" id="searchInput" class="search-box" placeholder="Search biryani, momos, paneer, roll..." oninput="renderMenu()" />
+      <div class="diet-filter">
+        <button class="diet-btn active-all" id="btnAll" onclick="setDiet('all')">All</button>
+        <button class="diet-btn" id="btnVeg" onclick="setDiet('veg')">Veg</button>
+        <button class="diet-btn" id="btnNonVeg" onclick="setDiet('nonveg')">Non-Veg</button>
+      </div>
+    </div>
+    <div class="cat-tabs" id="catTabs"></div>
+  </div>
+
+  <!-- VIEW 1: MENU -->
+  <main class="container view-panel active" id="view-menu">
+    <div class="table-banner" id="tableBanner">
+      <span id="tableBannerText"></span>
+      <button onclick="clearTable()" style="border:none;background:none;font-weight:700;color:#92400e;cursor:pointer;">Change</button>
+    </div>
+    <div id="menuContainer"></div>
+  </main>
+
+  <!-- VIEW 2: QR CODES -->
+  <section class="container view-panel" id="view-qr">
+    <div class="card-box no-print">
+      <h2>Printable QR Codes for Tables & Counter</h2>
+      <p>
+        Generate QR codes for your restaurant. <strong>Menu Ordering QR</strong> opens this interactive menu app (orders go directly to your WhatsApp <code>8271492457</code>). <strong>Direct WhatsApp QR</strong> opens a WhatsApp chat with you immediately upon scan.
+      </p>
+      <div class="form-group">
+        <label>Hosted Menu App URL (Auto-detected when uploaded online)</label>
+        <input type="text" id="qrBaseUrl" placeholder="https://your-restaurant-site.com" oninput="generateQRCodes()" />
+      </div>
+      <div class="form-group">
+        <label>Table Number (Optional — leave blank for general menu)</label>
+        <input type="text" id="qrTableNum" placeholder="e.g., 4" oninput="generateQRCodes()" />
+      </div>
+      <button class="btn-secondary" onclick="window.print()">🖨️ Print QR Cards</button>
+    </div>
+
+    <div class="qr-grid">
+      <div class="qr-card">
+        <h3 style="color:var(--primary);">ALOPAZ — Scan to Order Menu</h3>
+        <p style="font-size:12px;color:var(--muted);margin-top:4px;">Browse full menu, add to cart & send order to WhatsApp</p>
+        <div class="qr-holder" id="qrMenuBox"></div>
+        <div id="qrMenuUrlText" style="font-size:11px;word-break:break-all;color:var(--muted);"></div>
+      </div>
+
+      <div class="qr-card">
+        <h3 style="color:var(--primary);">ALOPAZ — Direct Owner WhatsApp</h3>
+        <p style="font-size:12px;color:var(--muted);margin-top:4px;">Scan to directly reach Owner WhatsApp (+91 8271492457)</p>
+        <div class="qr-holder" id="qrDirectWaBox"></div>
+        <div style="font-size:11px;color:var(--muted);">wa.me/918271492457</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW 3: OWNER KITCHEN PANEL -->
+  <section class="container view-panel" id="view-owner">
+    <div class="card-box">
+      <h2>👨‍🍳 Owner Kitchen & "Order Ready" Notifier</h2>
+      <p>
+        Every order placed on this device appears below. You can also <strong>add an incoming WhatsApp order manually</strong> or click <strong>"Mark Ready & Notify"</strong> on any order.
+        <br><br>
+        <strong>Zero-Tap Automation Option:</strong> If you host a WhatsApp Cloud API / Twilio / Make.com webhook, paste its URL below to fire "Order Ready" messages automatically in the background!
+      </p>
+      <div class="form-group">
+        <label>Optional Auto-Send Webhook URL (WhatsApp Cloud API / Make / Node.js)</label>
+        <div style="display:flex;gap:8px;">
+          <input type="url" id="webhookUrlInput" placeholder="https://your-server.com/api/send-order-ready" />
+          <button class="btn-secondary" onclick="saveWebhook()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Log Order (for orders arriving from other phones via WhatsApp) -->
+    <div class="card-box">
+      <h2 style="font-size:15px;">+ Quick Notify Any Customer</h2>
+      <p style="margin-bottom:8px;">Received an order on WhatsApp from another phone? Enter their details to send an instant "Order Ready" alert:</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <input type="text" id="quickName" placeholder="Customer Name" style="padding:8px;border:1px solid var(--border);border-radius:8px;" />
+        <input type="tel" id="quickPhone" placeholder="10-digit WhatsApp No." style="padding:8px;border:1px solid var(--border);border-radius:8px;" />
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="quickOrderId" placeholder="Order ID / Table (e.g. #ALZ-104)" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;" />
+        <button class="btn-ready" onclick="quickNotifyCustomer()">✅ Send Order Ready</button>
+      </div>
+    </div>
+
+    <div class="card-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h2 style="margin:0;">Active Orders</h2>
+        <button onclick="clearOrders()" style="background:none;border:none;color:var(--nonveg);font-size:12px;font-weight:700;cursor:pointer;">Clear All</button>
+      </div>
+      <div id="ownerOrdersList"></div>
+    </div>
+  </section>
+
+  <!-- Floating Cart Bar -->
+  <div class="cart-bar" id="cartBar" onclick="openCartModal()">
+    <div class="cart-bar-left">
+      <strong id="cartBarCount">0 Items | ₹0</strong>
+      <span>Tap to review & send to WhatsApp</span>
+    </div>
+    <button class="cart-bar-btn">View Cart →</button>
+  </div>
+
+  <!-- Cart & Checkout Modal -->
+  <div class="modal-backdrop" id="cartModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>🛒 Your Order Summary</h3>
+        <button class="close-btn" onclick="closeCartModal()">✕</button>
+      </div>
+
+      <div class="cart-list" id="cartItemsList"></div>
+
+      <div class="bill-summary">
+        <span>Total Payable</span>
+        <span id="modalTotal">₹0</span>
+      </div>
+
+      <form onsubmit="submitWhatsAppOrder(event)">
+        <div class="form-group">
+          <label>Your Name *</label>
+          <input type="text" id="custName" required placeholder="e.g., Rahul Sharma" />
+        </div>
+        <div class="form-group">
+          <label>Your WhatsApp Number * (to receive "Order Ready" alert)</label>
+          <input type="tel" id="custPhone" required pattern="[0-9]{10}" maxlength="10" placeholder="10-digit mobile number (e.g., 9876543210)" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group">
+            <label>Order Type *</label>
+            <select id="orderType" onchange="toggleTableField()">
+              <option value="Dine-In">Dine-In (Table)</option>
+              <option value="Takeaway">Takeaway / Parcel</option>
+            </select>
+          </div>
+          <div class="form-group" id="tableInputGroup">
+            <label>Table No.</label>
+            <input type="text" id="tableNumber" placeholder="e.g., Table 4" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Cooking Instructions (Optional)</label>
+          <input type="text" id="orderNotes" placeholder="e.g., Less spicy, extra onion..." />
+        </div>
+
+        <button type="submit" class="wa-submit-btn">
+          <span>Send Order to Owner's WhatsApp</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // CONFIGURATION
+    // ==========================================
+    const OWNER_WHATSAPP = "918271492457"; // +91 8271492457
+
+    // ==========================================
+    // COMPLETE ALOPAZ MENU DATA (130 ITEMS)
+    // ==========================================
+    const MENU_DATA = [
+      {
+        category: "Breakfast",
+        items: [
+          { id: "bk1", name: "Plain Paratha", veg: true, variants: [{ label: "Single", price: 30 }] },
+          { id: "bk2", name: "Aloo Paratha", veg: true, variants: [{ label: "Single", price: 40 }] },
+          { id: "bk3", name: "Onion Paratha", veg: true, variants: [{ label: "Single", price: 50 }] },
+          { id: "bk4", name: "Paneer Paratha", veg: true, variants: [{ label: "Single", price: 60 }] },
+          { id: "bk5", name: "Gobhi Paratha", veg: true, variants: [{ label: "Single", price: 40 }] },
+          { id: "bk6", name: "Onion Aloo Paratha", veg: true, variants: [{ label: "Single", price: 45 }] },
+          { id: "bk7", name: "Onion Paneer Paratha", veg: true, variants: [{ label: "Single", price: 55 }] },
+          { id: "bk8", name: "Aloo Puri", veg: true, variants: [{ label: "Plate", price: 50 }] },
+          { id: "bk9", name: "Chole Bhature", veg: true, variants: [{ label: "Plate", price: 70 }] },
+          { id: "bk10", name: "Poha", veg: true, variants: [{ label: "Plate", price: 50 }] },
+          { id: "bk11", name: "Pav Bhaaji", veg: true, variants: [{ label: "Plate", price: 60 }] },
+          { id: "bk12", name: "Bread Butter", veg: true, variants: [{ label: "Plate", price: 25 }] },
+          { id: "bk13", name: "Bread Cheese Garlic (4 Pcs)", veg: true, variants: [{ label: "4 Pcs", price: 80 }] },
+          { id: "bk14", name: "Bread Garlic (4 Pcs)", veg: true, variants: [{ label: "4 Pcs", price: 60 }] },
+          { id: "bk15", name: "Bread Omelette", veg: false, variants: [{ label: "Plate", price: 50 }] },
+          { id: "bk16", name: "Plain Omelette", veg: false, variants: [{ label: "Plate", price: 30 }] },
+          { id: "bk17", name: "Masala Omelette", veg: false, variants: [{ label: "Plate", price: 50 }] },
+          { id: "bk18", name: "Masala Cheese Omelette", veg: false, variants: [{ label: "Plate", price: 60 }] },
+          { id: "bk19", name: "Paneer Sandwich", veg: true, variants: [{ label: "Plate", price: 70 }] },
+          { id: "bk20", name: "Aloo Sandwich", veg: true, variants: [{ label: "Plate", price: 50 }] },
+          { id: "bk21", name: "Chilli Cheese Toast", veg: true, variants: [{ label: "Plate", price: 50 }] },
+          { id: "bk22", name: "Veg Sandwich (4 Pcs)", veg: true, variants: [{ label: "4 Pcs", price: 45 }] },
+          { id: "bk23", name: "Veg Grilled Sandwich (4 Pcs)", veg: true, variants: [{ label: "4 Pcs", price: 55 }] },
+          { id: "bk24", name: "Veg Cheese Grilled Sandwich (4 Pcs)", veg: true, variants: [{ label: "4 Pcs", price: 70 }] },
+          { id: "bk25", name: "Cheese Sandwich (4 Pcs)", veg: true, variants: [{ label: "4 Pcs", price: 65 }] },
+          { id: "bk26", name: "Grilled Cheese Sandwich (4 Pcs)", veg: true, variants: [{ label: "4 Pcs", price: 70 }] },
+          { id: "bk27", name: "Grilled Sandwich (4 Pcs)", veg: true, variants: [{ label: "4 Pcs", price: 55 }] },
+          { id: "bk28", name: "Macroni Vegetable", veg: true, variants: [{ label: "Plate", price: 50 }] },
+          { id: "bk29", name: "Pasta With Mix Sauce", veg: true, variants: [{ label: "Plate", price: 80 }] },
+          { id: "bk30", name: "Pasta With Red Sauce", veg: true, variants: [{ label: "Plate", price: 80 }] },
+          { id: "bk31", name: "Pasta With White Sauce", veg: true, variants: [{ label: "Plate", price: 80 }] },
+          { id: "bk32", name: "Samosa", veg: true, variants: [{ label: "1 Pc", price: 15 }] },
+          { id: "bk33", name: "Paneer Patties", veg: true, variants: [{ label: "1 Pc", price: 25 }] },
+          { id: "bk34", name: "Vada Pav (2 Pcs)", veg: true, variants: [{ label: "2 Pcs", price: 50 }] },
+          { id: "bk35", name: "Veg Hot Dog", veg: true, variants: [{ label: "1 Pc", price: 40 }] }
+        ]
+      },
+      {
+        category: "Other Delite",
+        items: [
+          { id: "od1", name: "Amritsari Kulcha With Chole & Raita", veg: true, variants: [{ label: "Plate", price: 90 }] },
+          { id: "od2", name: "Aloo Kulcha With Chole & Raita", veg: true, variants: [{ label: "Plate", price: 80 }] },
+          { id: "od3", name: "Paneer Kulcha With Chole & Raita", veg: true, variants: [{ label: "Plate", price: 100 }] },
+          { id: "od4", name: "Chole Chawal", veg: true, variants: [{ label: "Plate", price: 50 }] },
+          { id: "od5", name: "Dal Chawal", veg: true, variants: [{ label: "Plate", price: 50 }] },
+          { id: "od6", name: "Rajma Chawal", veg: true, variants: [{ label: "Plate", price: 50 }] },
+          { id: "od7", name: "Veg Haryali Kebab (6 Pcs)", veg: true, variants: [{ label: "6 Pcs", price: 70 }] },
+          { id: "od8", name: "Veg Seek Kebab (6 Pcs)", veg: true, variants: [{ label: "6 Pcs", price: 60 }] },
+          { id: "od9", name: "Veg Biryani", veg: true, variants: [{ label: "Plate", price: 110 }] },
+          { id: "od10", name: "Egg Biryani", veg: false, variants: [{ label: "Plate", price: 130 }] },
+          { id: "od11", name: "Chicken Biryani", veg: false, variants: [{ label: "Plate", price: 180 }] },
+          { id: "od12", name: "Chicken Seek Kebab (6 Pcs)", veg: false, variants: [{ label: "6 Pcs", price: 180 }] },
+          { id: "od13", name: "Mutton Seek Kebab (6 Pcs)", veg: false, variants: [{ label: "6 Pcs", price: 220 }] }
+        ]
+      },
+      {
+        category: "Chinese",
+        items: [
+          { id: "ch1", name: "French Fries", veg: true, variants: [{ label: "Plate", price: 57 }] },
+          { id: "ch2", name: "Honey Chilli Potato", veg: true, variants: [{ label: "Plate", price: 80 }] },
+          { id: "ch3", name: "Chilly Crispy Potato", veg: true, variants: [{ label: "Plate", price: 70 }] },
+          { id: "ch4", name: "Chilly Mushroom", veg: true, variants: [{ label: "Plate", price: 90 }] },
+          { id: "ch5", name: "Chilly Paneer Dry (6 Pcs)", veg: true, variants: [{ label: "6 Pcs", price: 110 }] },
+          { id: "ch6", name: "Spring Roll (2 Pcs)", veg: true, variants: [{ label: "Half / Veg", price: 50 }, { label: "Full / Special", price: 100 }] },
+          { id: "ch7", name: "Veg Manchurian (6 Pcs)", veg: true, variants: [{ label: "6 Pcs", price: 80 }] },
+          { id: "ch8", name: "Chilly Paneer Gravy (6 Pcs)", veg: true, variants: [{ label: "6 Pcs", price: 130 }] },
+          { id: "ch9", name: "Chilly Garlic Noodles", veg: true, variants: [{ label: "Half", price: 60 }, { label: "Full", price: 100 }] },
+          { id: "ch10", name: "Hakka Noodles", veg: true, variants: [{ label: "Half", price: 60 }, { label: "Full", price: 85 }] },
+          { id: "ch11", name: "Veg Noodles", veg: true, variants: [{ label: "Half", price: 50 }, { label: "Full", price: 90 }] },
+          { id: "ch12", name: "Chopsuey", veg: true, variants: [{ label: "Half", price: 70 }, { label: "Full", price: 90 }] },
+          { id: "ch13", name: "Fried Rice", veg: true, variants: [{ label: "Half", price: 50 }, { label: "Full", price: 109 }] },
+          { id: "ch14", name: "Momos Dimsum (6 Pcs)", veg: true, variants: [{ label: "Half / Veg", price: 50 }, { label: "Full / Chicken", price: 90 }] },
+          { id: "ch15", name: "Fried Momo (6 Pcs)", veg: true, variants: [{ label: "Half / Veg", price: 70 }, { label: "Full / Chicken", price: 90 }] },
+          { id: "ch16", name: "Paneer Momo (6 Pcs)", veg: true, variants: [{ label: "6 Pcs", price: 70 }] },
+          { id: "ch17", name: "Plain Maggie", veg: true, variants: [{ label: "Bowl", price: 30 }] },
+          { id: "ch18", name: "Vegetable Masala Maggi", veg: true, variants: [{ label: "Bowl", price: 50 }] },
+          { id: "ch19", name: "Egg Maggi", veg: false, variants: [{ label: "Bowl", price: 55 }] },
+          { id: "ch20", name: "Chilly Chicken Dry (6 Pcs)", veg: false, variants: [{ label: "6 Pcs", price: 170 }] },
+          { id: "ch21", name: "Chilly Chicken Gravy (6 Pcs)", veg: false, variants: [{ label: "6 Pcs", price: 199 }] },
+          { id: "ch22", name: "Garlic Chicken Gravy (6 Pcs)", veg: false, variants: [{ label: "6 Pcs", price: 199 }] },
+          { id: "ch23", name: "Lemon Chicken Gravy (6 Pcs)", veg: false, variants: [{ label: "6 Pcs", price: 179 }] }
+        ]
+      },
+      {
+        category: "Chinese Combos",
+        items: [
+          { id: "cc1", name: "Fried Rice, Chilly Paneer / Chicken & French Fries", veg: true, variants: [{ label: "Veg (Paneer)", price: 160 }, { label: "Chicken", price: 200 }] },
+          { id: "cc2", name: "Hakka Noodles, Spring Roll (1 Pc) & Momos (4 Pcs)", veg: true, variants: [{ label: "Regular", price: 110 }, { label: "Large", price: 220 }] },
+          { id: "cc3", name: "Fried Rice & Manchurian", veg: true, variants: [{ label: "Regular", price: 100 }, { label: "Large", price: 150 }] },
+          { id: "cc4", name: "Noodles, Spring Roll & Manchurian", veg: true, variants: [{ label: "Regular", price: 130 }, { label: "Large", price: 220 }] }
+        ]
+      },
+      {
+        category: "Kathi Roll",
+        items: [
+          { id: "kr1", name: "Chicken Cheese Roll", veg: false, variants: [{ label: "Roll", price: 130 }] },
+          { id: "kr2", name: "Chicken Roll", veg: false, variants: [{ label: "Roll", price: 99 }] },
+          { id: "kr3", name: "Egg Chicken Roll", veg: false, variants: [{ label: "Roll", price: 119 }] },
+          { id: "kr4", name: "Egg Roll", veg: false, variants: [{ label: "Roll", price: 80 }] },
+          { id: "kr5", name: "Paneer Roll", veg: true, variants: [{ label: "Roll", price: 70 }] },
+          { id: "kr6", name: "Paneer Tikka Roll", veg: true, variants: [{ label: "Roll", price: 90 }] },
+          { id: "kr7", name: "Soya Chaap Roll", veg: true, variants: [{ label: "Roll", price: 70 }] },
+          { id: "kr8", name: "Aloo Roll", veg: true, variants: [{ label: "Roll", price: 60 }] },
+          { id: "kr9", name: "Veg Roll", veg: true, variants: [{ label: "Roll", price: 60 }] }
+        ]
+      },
+      {
+        category: "Main Course",
+        items: [
+          { id: "mc1", name: "Yellow Dal Tadka", veg: true, variants: [{ label: "Full", price: 90 }] },
+          { id: "mc2", name: "Aloo Gobhi Adraki", veg: true, variants: [{ label: "Full", price: 110 }] },
+          { id: "mc3", name: "Rajma Masala", veg: true, variants: [{ label: "Full", price: 80 }] },
+          { id: "mc4", name: "Dal Makhani", veg: true, variants: [{ label: "Full", price: 100 }] },
+          { id: "mc5", name: "Kadhi Pakoda", veg: true, variants: [{ label: "Full", price: 80 }] },
+          { id: "mc6", name: "Gobi Masala", veg: true, variants: [{ label: "Full", price: 80 }] },
+          { id: "mc7", name: "Jeera Aloo", veg: true, variants: [{ label: "Full", price: 60 }] },
+          { id: "mc8", name: "Mix Veg", veg: true, variants: [{ label: "Full", price: 90 }] },
+          { id: "mc9", name: "Veg Jalfrezy", veg: true, variants: [{ label: "Full", price: 90 }] },
+          { id: "mc10", name: "Bhindi Masala", veg: true, variants: [{ label: "Full", price: 80 }] },
+          { id: "mc11", name: "Chana Masala", veg: true, variants: [{ label: "Full", price: 90 }] },
+          { id: "mc12", name: "Malai Kofta", veg: true, variants: [{ label: "Full", price: 130 }] },
+          { id: "mc13", name: "Mashroom Masala", veg: true, variants: [{ label: "Full", price: 100 }] },
+          { id: "mc14", name: "Kadai Paneer", veg: true, variants: [{ label: "Full", price: 130 }] },
+          { id: "mc15", name: "Kadhi Mashroom", veg: true, variants: [{ label: "Full", price: 130 }] },
+          { id: "mc16", name: "Matar Paneer", veg: true, variants: [{ label: "Full", price: 110 }] },
+          { id: "mc17", name: "Paneer Bhurji", veg: true, variants: [{ label: "Full", price: 150 }] },
+          { id: "mc18", name: "Palak Paneer", veg: true, variants: [{ label: "Full", price: 120 }] },
+          { id: "mc19", name: "Masala Soya Chaap", veg: true, variants: [{ label: "Full", price: 130 }] },
+          { id: "mc20", name: "Shahi Paneer", veg: true, variants: [{ label: "Full", price: 130 }] },
+          { id: "mc21", name: "Paneer Butter Masala", veg: true, variants: [{ label: "Full", price: 130 }] },
+          { id: "mc22", name: "Paneer Lababdar", veg: true, variants: [{ label: "Full", price: 120 }] },
+          { id: "mc23", name: "Plain Rice", veg: true, variants: [{ label: "Plate", price: 40 }] },
+          { id: "mc24", name: "Jeera Rice", veg: true, variants: [{ label: "Plate", price: 70 }] },
+          { id: "mc25", name: "Veg Pulao", veg: true, variants: [{ label: "Plate", price: 75 }] },
+          { id: "mc26", name: "Mix Raita", veg: true, variants: [{ label: "Bowl", price: 50 }] },
+          { id: "mc27", name: "Onion Salad", veg: true, variants: [{ label: "Plate", price: 30 }] },
+          { id: "mc28", name: "Green Salad", veg: true, variants: [{ label: "Plate", price: 50 }] }
+        ]
+      },
+      {
+        category: "Nonveg Main Course",
+        items: [
+          { id: "nv1", name: "Tandoori Chicken", veg: false, variants: [{ label: "Half", price: 165 }, { label: "Full", price: 320 }] },
+          { id: "nv2", name: "Tandoori Afghani Chicken", veg: false, variants: [{ label: "Half", price: 190 }, { label: "Full", price: 350 }] },
+          { id: "nv3", name: "Butter Chicken", veg: false, variants: [{ label: "Half", price: 210 }, { label: "Full", price: 399 }] },
+          { id: "nv4", name: "Chicken Changezi", veg: false, variants: [{ label: "Half", price: 220 }, { label: "Full", price: 399 }] },
+          { id: "nv5", name: "Chicken Curry", veg: false, variants: [{ label: "Half", price: 200 }, { label: "Full", price: 390 }] },
+          { id: "nv6", name: "Chicken Do Pyaza", veg: false, variants: [{ label: "Half", price: 210 }, { label: "Full", price: 399 }] },
+          { id: "nv7", name: "Chicken Haryali", veg: false, variants: [{ label: "Half", price: 210 }, { label: "Full", price: 399 }] },
+          { id: "nv8", name: "Chicken Kali Mirch", veg: false, variants: [{ label: "Half", price: 215 }, { label: "Full", price: 410 }] },
+          { id: "nv9", name: "Chicken Korma", veg: false, variants: [{ label: "Half", price: 220 }, { label: "Full", price: 430 }] },
+          { id: "nv10", name: "Chicken Lababdar", veg: false, variants: [{ label: "Half", price: 215 }, { label: "Full", price: 410 }] },
+          { id: "nv11", name: "Chicken Masala", veg: false, variants: [{ label: "Half", price: 210 }, { label: "Full", price: 399 }] },
+          { id: "nv12", name: "Kadai Chicken", veg: false, variants: [{ label: "Half", price: 210 }, { label: "Full", price: 399 }] }
+        ]
+      },
+      {
+        category: "Breads",
+        items: [
+          { id: "br1", name: "Butter Naan", veg: true, variants: [{ label: "1 Pc", price: 30 }] },
+          { id: "br2", name: "Lacha Prahtha", veg: true, variants: [{ label: "1 Pc", price: 30 }] },
+          { id: "br3", name: "Plain Naan", veg: true, variants: [{ label: "1 Pc", price: 25 }] },
+          { id: "br4", name: "Tandoori Butter Roti", veg: true, variants: [{ label: "1 Pc", price: 19 }] },
+          { id: "br5", name: "Tandoori Roti", veg: true, variants: [{ label: "1 Pc", price: 15 }] },
+          { id: "br6", name: "Tawa Roti", veg: true, variants: [{ label: "1 Pc", price: 10 }] }
+        ]
+      }
+    ];
+
+    // ==========================================
+    // STATE
+    // ==========================================
+    let activeCategory = "All";
+    let dietFilter = "all";
+    let cart = {}; // key: `${itemId}__${variantIdx}` -> { itemId, name, variantLabel, price, qty, veg }
+
+    // Init
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const tableParam = params.get("table");
+      if (tableParam) {
+        document.getElementById("tableNumber").value = "Table " + tableParam;
+        document.getElementById("tableBannerText").innerText = "📍 Ordering for Table " + tableParam;
+        document.getElementById("tableBanner").style.display = "flex";
+      }
+
+      document.getElementById("qrBaseUrl").value = window.location.href.split("?")[0];
+      document.getElementById("webhookUrlInput").value = localStorage.getItem("alopaz_webhook") || "";
+
+      renderCategoryTabs();
+      renderMenu();
+      renderOwnerOrders();
+      generateQRCodes();
+    });
+
+    function clearTable() {
+      document.getElementById("tableBanner").style.display = "none";
+      document.getElementById("tableNumber").value = "";
+    }
+
+    // Navigation Views
+    function switchView(view, btn) {
+      document.querySelectorAll(".nav-pill").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll(".view-panel").forEach(v => v.classList.remove("active"));
+      document.getElementById("view-" + view).classList.add("active");
+      document.getElementById("menuControls").style.display = view === "menu" ? "block" : "none";
+      if (view === "qr") generateQRCodes();
+      if (view === "owner") renderOwnerOrders();
+    }
+
+    // Diet Filter
+    function setDiet(type) {
+      dietFilter = type;
+      document.getElementById("btnAll").className = "diet-btn" + (type === "all" ? " active-all" : "");
+      document.getElementById("btnVeg").className = "diet-btn" + (type === "veg" ? " active-veg" : "");
+      document.getElementById("btnNonVeg").className = "diet-btn" + (type === "nonveg" ? " active-nonveg" : "");
+      renderMenu();
+    }
+
+    // Category Tabs
+    function renderCategoryTabs() {
+      const tabsEl = document.getElementById("catTabs");
+      const cats = ["All", ...MENU_DATA.map(c => c.category)];
+      tabsEl.innerHTML = cats.map(cat => `
+        <button class="cat-tab ${activeCategory === cat ? "active" : ""}" onclick="selectCategory('${cat}')">${cat}</button>
+      `).join("");
+    }
+
+    function selectCategory(cat) {
+      activeCategory = cat;
+      renderCategoryTabs();
+      renderMenu();
+    }
+
+    // Render Menu
+    function renderMenu() {
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      const container = document.getElementById("menuContainer");
+      let html = "";
+
+      MENU_DATA.forEach(section => {
+        if (activeCategory !== "All" && section.category !== activeCategory) return;
+
+        const filteredItems = section.items.filter(item => {
+          const matchesQuery = item.name.toLowerCase().includes(query) || section.category.toLowerCase().includes(query);
+          const matchesDiet = dietFilter === "all" || (dietFilter === "veg" && item.veg) || (dietFilter === "nonveg" && !item.veg);
+          return matchesQuery && matchesDiet;
+        });
+
+        if (filteredItems.length === 0) return;
+
+        html += `
+          <div class="cat-heading">
+            <h2>${section.category}</h2>
+            <span>${filteredItems.length} items</span>
+          </div>
+          <div class="menu-grid">
+        `;
+
+        filteredItems.forEach(item => {
+          html += `
+            <div class="item-card">
+              <div class="item-top">
+                <div class="veg-icon ${item.veg ? "" : "nonveg"}"></div>
+                <div>
+                  <div class="item-title">${item.name}</div>
+                  <div class="item-sub">${section.category}</div>
+                </div>
+              </div>
+              <div class="variant-row">
+                ${item.variants.map((v, idx) => {
+                  const key = `${item.id}__${idx}`;
+                  const qty = cart[key] ? cart[key].qty : 0;
+                  return `
+                    <div class="variant-line">
+                      <div>
+                        <span class="variant-label">${v.label}</span>
+                        <span class="price"> • ₹${v.price}</span>
+                      </div>
+                      ${qty === 0
+                        ? `<button class="add-btn" onclick="updateCart('${item.id}', ${idx}, 1)">+ ADD</button>`
+                        : `<div class="stepper">
+                            <button onclick="updateCart('${item.id}', ${idx}, -1)">−</button>
+                            <span>${qty}</span>
+                            <button onclick="updateCart('${item.id}', ${idx}, 1)">+</button>
+                           </div>`
+                      }
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+      });
+
+      container.innerHTML = html || `<div class="card-box" style="text-align:center;">No dishes matched your filter.</div>`;
+    }
+
+    // Cart Logic
+    function findItem(itemId) {
+      for (const sec of MENU_DATA) {
+        const found = sec.items.find(i => i.id === itemId);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function updateCart(itemId, variantIdx, delta) {
+      const item = findItem(itemId);
+      if (!item) return;
+      const variant = item.variants[variantIdx];
+      const key = `${itemId}__${variantIdx}`;
+
+      if (!cart[key]) {
+        cart[key] = { itemId, name: item.name, variantLabel: variant.label, price: variant.price, qty: 0, veg: item.veg };
+      }
+      cart[key].qty += delta;
+      if (cart[key].qty <= 0) delete cart[key];
+
+      renderMenu();
+      updateCartBar();
+      if (document.getElementById("cartModal").classList.contains("open")) renderCartModal();
+    }
+
+    function getCartTotals() {
+      const entries = Object.entries(cart);
+      let count = 0, total = 0;
+      entries.forEach(([, c]) => { count += c.qty; total += c.qty * c.price; });
+      return { entries, count, total };
+    }
+
+    function updateCartBar() {
+      const { count, total } = getCartTotals();
+      const bar = document.getElementById("cartBar");
+      document.getElementById("cartBarCount").innerText = `${count} Item${count !== 1 ? "s" : ""} | ₹${total}`;
+      bar.classList.toggle("visible", count > 0);
+    }
+
+    function openCartModal() {
+      renderCartModal();
+      document.getElementById("cartModal").classList.add("open");
+    }
+
+    function closeCartModal() {
+      document.getElementById("cartModal").classList.remove("open");
+    }
+
+    function toggleTableField() {
+      const type = document.getElementById("orderType").value;
+      document.getElementById("tableInputGroup").style.display = type === "Dine-In" ? "block" : "none";
+    }
+
+    function renderCartModal() {
+      const { entries, total } = getCartTotals();
+      const list = document.getElementById("cartItemsList");
+      if (entries.length === 0) {
+        closeCartModal();
+        return;
+      }
+
+      list.innerHTML = entries.map(([key, c]) => {
+        const [itemId, idx] = key.split("__");
+        return `
+          <div class="cart-row">
+            <div class="cart-row-info">
+              <h4>${c.name} <small style="color:var(--muted);">(${c.variantLabel})</small></h4>
+              <p>₹${c.price} × ${c.qty} = <strong>₹${c.price * c.qty}</strong></p>
+            </div>
+            <div class="stepper">
+              <button onclick="updateCart('${itemId}', ${idx}, -1)">−</button>
+              <span>${c.qty}</span>
+              <button onclick="updateCart('${itemId}', ${idx}, 1)">+</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      document.getElementById("modalTotal").innerText = `₹${total}`;
+    }
+
+    // Submit Order -> Owner WhatsApp + Save for Owner Kitchen
+    function submitWhatsAppOrder(e) {
+      e.preventDefault();
+      const { entries, total } = getCartTotals();
+      if (entries.length === 0) return;
+
+      const name = document.getElementById("custName").value.trim();
+      const phone = document.getElementById("custPhone").value.trim();
+      const orderType = document.getElementById("orderType").value;
+      const tableNum = document.getElementById("tableNumber").value.trim() || "Not specified";
+      const notes = document.getElementById("orderNotes").value.trim();
+      const orderId = "ALZ-" + Math.floor(1000 + Math.random() * 9000);
+
+      const itemLines = entries.map(([, c], i) =>
+        `${i + 1}. ${c.name} (${c.variantLabel}) × ${c.qty} = ₹${c.price * c.qty}`
+      ).join("\n");
+
+      // Pre-built 1-tap Order Ready link back to the customer
+      const readyMsg = `Hello ${name}, your order *#${orderId}* from *Alopaz Multicuisine Restaurant* is *READY*! 🍽️ Please collect it or wait at your table.`;
+      const customerReadyLink = `https://wa.me/91${phone}?text=${encodeURIComponent(readyMsg)}`;
+
+      const waMessage =
+`🍽️ *NEW ORDER — ALOPAZ RESTAURANT*
+*Order ID:* #${orderId}
+*Type:* ${orderType}${orderType === "Dine-In" ? ` (${tableNum})` : ""}
+*Customer:* ${name}
+*Customer WhatsApp:* +91 ${phone}
+
+*Items Ordered:*
+${itemLines}
+
+*Total Bill:* ₹${total}${notes ? `\n*Instructions:* ${notes}` : ""}
+
+--------------------------
+✅ *Tap below when food is ready to notify ${name}:*
+${customerReadyLink}`;
+
+      // Save to Owner Kitchen Panel (localStorage)
+      const orders = JSON.parse(localStorage.getItem("alopaz_orders") || "[]");
+      orders.unshift({
+        id: orderId,
+        name,
+        phone,
+        orderType,
+        tableNum,
+        items: entries.map(([, c]) => `${c.name} (${c.variantLabel}) x${c.qty}`),
+        total,
+        status: "Pending",
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      });
+      localStorage.setItem("alopaz_orders", JSON.stringify(orders));
+
+      // Clear cart & close modal
+      cart = {};
+      renderMenu();
+      updateCartBar();
+      closeCartModal();
+
+      // Open Owner's WhatsApp directly
+      window.open(`https://wa.me/${OWNER_WHATSAPP}?text=${encodeURIComponent(waMessage)}`, "_blank");
+    }
+
+    // ==========================================
+    // QR CODE GENERATOR
+    // ==========================================
+    function generateQRCodes() {
+      const base = document.getElementById("qrBaseUrl").value.trim() || window.location.href.split("?")[0];
+      const table = document.getElementById("qrTableNum").value.trim();
+      const menuUrl = table ? `${base}?table=${encodeURIComponent(table)}` : base;
+
+      document.getElementById("qrMenuUrlText").innerText = menuUrl;
+
+      const menuBox = document.getElementById("qrMenuBox");
+      const waBox = document.getElementById("qrDirectWaBox");
+      menuBox.innerHTML = "";
+      waBox.innerHTML = "";
+
+      const directWaUrl = `https://wa.me/${OWNER_WHATSAPP}?text=${encodeURIComponent("Hello Alopaz Restaurant, I want to place an order.")}`;
+
+      if (typeof QRCode !== "undefined") {
+        new QRCode(menuBox, { text: menuUrl, width: 170, height: 170, colorDark: "#0b3b24", colorLight: "#ffffff" });
+        new QRCode(waBox, { text: directWaUrl, width: 170, height: 170, colorDark: "#0b3b24", colorLight: "#ffffff" });
+      } else {
+        menuBox.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(menuUrl)}" alt="Menu QR" />`;
+        waBox.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(directWaUrl)}" alt="WhatsApp QR" />`;
+      }
+    }
+
+    // ==========================================
+    // OWNER KITCHEN PANEL & READY NOTIFICATION
+    // ==========================================
+    function saveWebhook() {
+      const url = document.getElementById("webhookUrlInput").value.trim();
+      localStorage.setItem("alopaz_webhook", url);
+      alert(url ? "Webhook URL saved! Clicking 'Mark Ready' will trigger this webhook." : "Webhook cleared. Using direct WhatsApp link mode.");
+    }
+
+    function renderOwnerOrders() {
+      const orders = JSON.parse(localStorage.getItem("alopaz_orders") || "[]");
+      const list = document.getElementById("ownerOrdersList");
+      if (orders.length === 0) {
+        list.innerHTML = `<p style="font-size:13px;color:var(--muted);">No orders logged on this device yet.</p>`;
+        return;
+      }
+
+      list.innerHTML = orders.map((o, idx) => `
+        <div class="order-ticket ${o.status === "Ready" ? "ready" : ""}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <strong>#${o.id} • ${o.name} (+91 ${o.phone})</strong>
+            <span class="badge ${o.status === "Ready" ? "badge-ready" : "badge-pending"}">${o.status}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">
+            ${o.orderType} (${o.tableNum}) • ${o.time} • <strong>₹${o.total}</strong>
+          </div>
+          <div style="font-size:12px;margin-bottom:10px;">${o.items.join(", ")}</div>
+          <button class="btn-ready" onclick="notifyOrderReady(${idx})">
+            ✅ ${o.status === "Ready" ? "Resend Order Ready Alert" : "Mark Ready & Notify Customer"}
+          </button>
+        </div>
+      `).join("");
+    }
+
+    async function notifyOrderReady(index) {
+      const orders = JSON.parse(localStorage.getItem("alopaz_orders") || "[]");
+      const o = orders[index];
+      if (!o) return;
+
+      o.status = "Ready";
+      localStorage.setItem("alopaz_orders", JSON.stringify(orders));
+      renderOwnerOrders();
+
+      await sendReadyNotification(o.name, o.phone, o.id);
+    }
+
+    async function quickNotifyCustomer() {
+      const name = document.getElementById("quickName").value.trim() || "Customer";
+      const phone = document.getElementById("quickPhone").value.trim().replace(/\D/g, "");
+      const orderId = document.getElementById("quickOrderId").value.trim() || "Order";
+      if (phone.length < 10) {
+        alert("Please enter a valid 10-digit customer WhatsApp number.");
+        return;
+      }
+      await sendReadyNotification(name, phone.slice(-10), orderId);
+    }
+
+    async function sendReadyNotification(name, phone, orderId) {
+      const webhookUrl = localStorage.getItem("alopaz_webhook") || "";
+      const readyText = `Hello ${name}, your order *#${orderId}* from *Alopaz Multicuisine Restaurant* is *READY*! 🍽️`;
+
+      if (webhookUrl) {
+        try {
+          const res = await fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: "91" + phone, name, orderId, message: readyText })
+          });
+          if (res.ok) {
+            alert(`Automatic WhatsApp alert sent to +91 ${phone}!`);
+            return;
+          }
+        } catch (err) {
+          console.error("Webhook failed, falling back to WhatsApp link:", err);
+        }
+      }
+
+      // Direct WhatsApp fallback / default
+      window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(readyText)}`, "_blank");
+    }
+
+    function clearOrders() {
+      if (confirm("Clear all locally saved orders?")) {
+        localStorage.removeItem("alopaz_orders");
+        renderOwnerOrders();
+      }
+    }
+  </script>
+</body>
+</html>
